@@ -3235,7 +3235,7 @@ class PesterWindow(MovingWindow):
     @QtCore.pyqtSlot()
     def themeSelected(self, override=False):
         if not override:
-            themename = self.optionmenu.themeBox.currentText()
+            themename = self.optionmenu.themeBoxSquared.currentItem().text() #themeBox for old stuff, currentText() --casting maybe? --works! //hightekHextress
         else:
             themename = override
         if override or themename != self.theme.name:

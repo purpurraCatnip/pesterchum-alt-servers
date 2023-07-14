@@ -16,6 +16,7 @@ from theme_repo_manager import ThemeManagerWidget
 from generic import RightClickList, RightClickTree, MultiTextDialog
 from dataobjs import pesterQuirk, PesterProfile, PesterHistory
 from memos import TimeSlider, TimeInput
+from user_profile import pesterTheme
 from version import _pcVersion
 from convo import PesterInput, PesterText
 from parsetools import lexMessage
@@ -948,12 +949,12 @@ class PesterChooseTheme(QtWidgets.QDialog):
 
         instructions = QtWidgets.QLabel("Pick a theme:")
 
-        avail_themes = config.availableThemes()
-        self.themeBox = QtWidgets.QComboBox(self)
-        for i, t in enumerate(avail_themes):
-            self.themeBox.addItem(t)
-            if t == theme.name:
-                self.themeBox.setCurrentIndex(i)
+        #avail_themes = config.availableThemes()
+        #self.themeBoxSquared = QtWidgets.QListWidget(self)
+        #for i, t in enumerate(avail_themes):
+        #    self.themeBoxSquared.addItem(t)
+            #if t == theme.name:
+            #    self.themeBoxSquared.setCurrentIndex(i)
 
         self.ok = QtWidgets.QPushButton("OK", self)
         self.ok.setDefault(True)
@@ -966,7 +967,7 @@ class PesterChooseTheme(QtWidgets.QDialog):
 
         layout_0 = QtWidgets.QVBoxLayout()
         layout_0.addWidget(instructions)
-        layout_0.addWidget(self.themeBox)
+        #layout_0.addWidget(self.themeBoxSquared)
         layout_0.addLayout(layout_ok)
 
         self.setLayout(layout_0)
@@ -1454,23 +1455,70 @@ class PesterOptions(QtWidgets.QDialog):
         if not parent.randhandler.running:
             self.randomscheck.setEnabled(False)
 
-        self.themeBox = QtWidgets.QComboBox(self)
-        def reset_themeBox():
+        #self.themeBox = QtWidgets.QComboBox(self)
+        #def reset_themeBox():
+        #    avail_themes = self.config.availableThemes()
+        #    PchumLog.debug("Resetting themeself.themeBox")
+        #    self.themeBox.clear()
+        #    notheme = theme.name not in avail_themes
+        #    for i, t in enumerate(avail_themes):
+        #        self.themeBox.addItem(t)
+        #        if (not notheme and t == theme.name) or (notheme and t == "pesterchum"):
+        #            self.themeBox.setCurrentIndex(i)
+        #    self.themeBox.setSizePolicy(
+        #        QtWidgets.QSizePolicy(
+        #            QtWidgets.QSizePolicy.Policy.MinimumExpanding,
+        #            QtWidgets.QSizePolicy.Policy.Minimum,
+        #        )
+        #    )
+        #reset_themeBox()
+        self.line_search = QtWidgets.QLineEdit()
+        self.line_search.setPlaceholderText("Search for themes")
+
+        #New experimental theme box but its a scrollable list oooooooo
+        #Completely replaces the old theme box, works wonderfully :) //hightekHextress
+        self.themeBoxSquared = QtWidgets.QListWidget()
+        def refreshThemes(search=""):
             avail_themes = self.config.availableThemes()
-            PchumLog.debug("Resetting themeself.themeBox")
-            self.themeBox.clear()
+            PchumLog.debug("Refreshing your BEAUTIFUL themes ~")
+            self.themeBoxSquared.clear()
             notheme = theme.name not in avail_themes
-            for i, t in enumerate(avail_themes):
-                self.themeBox.addItem(t)
+
+            for i, text in enumerate(avail_themes):
+                ico = QtGui.QPixmap()
+                ico.load(pesterTheme(text)['main/icon'])
+
+                print("Is null? " + str(ico.isNull()))
+                
+                if ico.isNull():
+                    ico.load("themes/pesterchum/trayicon")
+
+
+                icon = QtGui.QIcon(ico)
+                if(search != ""):
+                    if text.lower().find(search.lower()) >= 0:
+                        pass
+                    else:
+                        continue
+                item = QtWidgets.QListWidgetItem(icon, text)
+                self.themeBoxSquared.addItem(item)
                 if (not notheme and t == theme.name) or (notheme and t == "pesterchum"):
-                    self.themeBox.setCurrentIndex(i)
-            self.themeBox.setSizePolicy(
-                QtWidgets.QSizePolicy(
-                    QtWidgets.QSizePolicy.Policy.MinimumExpanding,
-                    QtWidgets.QSizePolicy.Policy.Minimum,
-                )
-            )
-        reset_themeBox()
+                    self.themeBoxSquared.setCurrentRow(i)
+        refreshThemes()
+
+        self.line_search.textChanged.connect(lambda: refreshThemes(self.line_search.text()))
+
+        self.detailBox = QtWidgets.QWidget()
+        #self.detailName = QtWidgets.QLabel()
+        #self.detailAuthor = QtWidgets.QLabel()
+        #self.detailDesc = QtWidgets.QLabel()
+        #self.detailVersion = QtWidgets.QLabel()
+        #self.detailDate = QtWidgets.QLabel()
+
+        def refreshDetails():
+            print("Stuff")
+            #Going to refresh and add the stuff in here to avoid doing it all the time
+
         self.refreshtheme = QtWidgets.QPushButton("Refresh current theme", self)
         self.refreshtheme.clicked.connect(parent.themeSelectOverride)
         self.refreshtheme.setSizePolicy(
@@ -1480,7 +1528,8 @@ class PesterOptions(QtWidgets.QDialog):
             )
         )
         self.themeManager = ThemeManagerWidget(self.config)
-        self.themeManager.rebuilt.connect( reset_themeBox )
+        self.themeManager.rebuilt.connect( refreshThemes )
+        #reset_themebox() )
         # This makes it so that the themeBox gets updated when a theme is installed or removed through the repository
         self.ghostchum = QtWidgets.QCheckBox("Pesterdunk Ghostchum!!", self)
         self.ghostchum.setChecked(self.config.ghostchum())
@@ -1695,12 +1744,38 @@ class PesterOptions(QtWidgets.QDialog):
         layout_theme.setAlignment(QtCore.Qt.AlignmentFlag.AlignTop)
         layout_theme.addWidget(QtWidgets.QLabel("Pick a Theme:"))
 
+        #testing out a tab thing - looks like shit rn, but I will add in a detail box later! //hightekHextress
+        themeTabs = QtWidgets.QTabWidget()
+        tab1 = QtWidgets.QWidget()                
+        innerLayoutBox = QtWidgets.QWidget()
+
+        tab2 = QtWidgets.QWidget()
+
+        themeTabs.addTab(tab1, "Installed Themes")
+        themeTabs.addTab(tab2, "Theme Browser")
+
         layout_theme_hbox = QtWidgets.QHBoxLayout()
-        layout_theme_hbox.addWidget(self.themeBox)
-        layout_theme_hbox.addWidget(self.refreshtheme)
+        
+        tab1.layout = QtWidgets.QVBoxLayout()
+        innerLayoutBox.layout = QtWidgets.QHBoxLayout()
+        innerLayoutBox.layout.addWidget(self.themeBoxSquared)
+        innerLayoutBox.layout.addWidget(self.detailBox)
+        innerLayoutBox.setLayout(innerLayoutBox.layout)
+        tab1.layout.addWidget(self.line_search)
+        tab1.layout.addWidget(innerLayoutBox)
+        tab1.layout.addWidget(self.refreshtheme)
+        tab1.setLayout(tab1.layout)
+
+        tab2.layout = QtWidgets.QVBoxLayout()
+        tab2.layout.addWidget(self.themeManager)
+        tab2.setLayout(tab2.layout)
+
+        layout_theme.addWidget(themeTabs)
+        #layout_theme_hbox.addWidget(self.themeBox)         <== Going to keep the original code just in case //hightekHextress
+        #layout_theme_hbox.addWidget(self.refreshtheme)
         layout_theme.addLayout(layout_theme_hbox)
-        layout_theme.addWidget(QtWidgets.QLabel("Get new themes:"))
-        layout_theme.addWidget(self.themeManager)
+        #layout_theme.addWidget(QtWidgets.QLabel("Get new themes:"))
+        #layout_theme.addWidget(self.themeManager)
         layout_theme.addWidget(self.ghostchum)
         self.pages.addWidget(widget)
 

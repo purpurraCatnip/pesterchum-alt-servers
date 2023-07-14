@@ -179,9 +179,9 @@ class ThemeManagerWidget(QtWidgets.QWidget):
         
         # Search bar
         # TODO: implement searching
-        # self.line_search = QtWidgets.QLineEdit()
-        # self.line_search.setPlaceholderText("Search for themes")
-        # self.layout_main.addWidget(self.line_search)
+        self.line_search = QtWidgets.QLineEdit()
+        self.line_search.setPlaceholderText("Search for themes")
+        self.layout_main.addWidget(self.line_search)
 
         # Main layout
         # [list of themes/results] | [selected theme details]
@@ -195,6 +195,7 @@ class ThemeManagerWidget(QtWidgets.QWidget):
             )
         )
         self.list_results.itemClicked.connect(self._on_theme_selected)
+        self.list_results.itemDoubleClicked.connect(self._on_install_clicked)
         layout_hbox_list_and_details.addWidget(self.list_results)
 
 
@@ -216,8 +217,10 @@ class ThemeManagerWidget(QtWidgets.QWidget):
         self.lbl_theme_name = QtWidgets.QLabel("Click a theme to get started")
         self.lbl_theme_name.setTextInteractionFlags(_flag_selectable)
         self.lbl_theme_name.setStyleSheet("QLabel { font-size: 16px; font-weight:bold;}")
-        self.lbl_theme_name.setWordWrap(False)
+        self.lbl_theme_name.setWordWrap(True)
         layout_vbox_scroll_insides.addWidget(self.lbl_theme_name)
+
+        self.line_search.textChanged.connect(self.searchFunction)
         
         # Author name
         self.lbl_author_name = QtWidgets.QLabel("")
@@ -324,7 +327,7 @@ class ThemeManagerWidget(QtWidgets.QWidget):
     def _on_database_refreshed(self,_):
         self.rebuild()
 
-    def rebuild(self):
+    def rebuild(self, search=""):
         database = themeManager.database
         self.list_results.clear()
         self.lbl_error.setText("")
@@ -347,9 +350,18 @@ class ThemeManagerWidget(QtWidgets.QWidget):
                     status = '~ (installed)'
                     icon = self.icons[1]
             text = "%s by %s %s" % (dbitem['name'], dbitem['author'], status)
+
+            #This is how it checks for the search!! - hightekHextress ;P
+            if(search != ""):
+                searchCheck = text.lower()
+                if searchCheck.find(search.lower()) >= 0:
+                    pass
+                else:
+                    continue
+
             item = QtWidgets.QListWidgetItem(icon, text)
             self.list_results.addItem(item)
-        
+
         self.btn_install.setDisabled(True)
         for lbl in [self.lbl_author_name, self.lbl_description, self.lbl_version, self.lbl_requires, self.lbl_last_update]:
             lbl.setText("")
@@ -361,3 +373,7 @@ class ThemeManagerWidget(QtWidgets.QWidget):
 
         self.rebuilt.emit()
         PchumLog.debug("Rebuilt emitted")
+    
+    def searchFunction(self):
+        self.rebuild(self.line_search.text())
+    
