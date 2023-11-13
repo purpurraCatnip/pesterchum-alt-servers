@@ -1488,7 +1488,7 @@ class PesterOptions(QtWidgets.QDialog):
                 ico = QtGui.QPixmap()
                 ico.load(pesterTheme(text)['main/icon'])
 
-                print("Is null? " + str(ico.isNull()))
+                print("Is null? " + str(ico.isNull()) + "\n" + ostools.getDataDir())
                 
                 if ico.isNull():
                     ico.load("themes/pesterchum/trayicon")
